@@ -291,11 +291,14 @@ export class McpResponse implements Response {
       );
     }
 
+    const devToolsData = await context.getDevToolsContextData();
+
     return this.format(toolName, context, {
       bodies,
       consoleData,
       consoleListData,
       formattedSnapshot,
+      devToolsData,
     });
   }
 
@@ -310,11 +313,21 @@ export class McpResponse implements Response {
       consoleData: ConsoleMessageData | undefined;
       consoleListData: ConsoleMessageData[] | undefined;
       formattedSnapshot: string | undefined;
+      devToolsData?: {requestId?: number};
     },
   ): Array<TextContent | ImageContent> {
     const response = [`# ${toolName} response`];
     for (const line of this.#textResponseLines) {
       response.push(line);
+    }
+
+    response.push('## Network requests inspected in DevTools');
+    if (data.devToolsData?.requestId) {
+      response.push(`Network request: reqid=${data.devToolsData?.requestId}`);
+    } else {
+      response.push(
+        `Nothing inspected right now. Call list_pages to check if anything is selected by the user in DevTools.`,
+      );
     }
 
     const networkConditions = context.getNetworkConditions();
